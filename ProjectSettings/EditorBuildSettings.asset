@@ -4,6 +4,9 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/InfiniteRunnerScene.unity
+    guid: ea5f2b4f867343b4a9d4c910e9f6b1f0
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

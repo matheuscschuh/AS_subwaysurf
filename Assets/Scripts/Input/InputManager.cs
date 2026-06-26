@@ -44,6 +44,14 @@ namespace InfiniteRunner.InputSystem
             {
                 playerController.TryMoveRight();
             }
+            else if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Space))
+            {
+                playerController.Jump();
+            }
+            else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                playerController.Roll();
+            }
         }
     }
 }
