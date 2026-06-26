@@ -10,7 +10,7 @@ namespace InfiniteRunner.Player
         [SerializeField] private float laneDistance = 3.0f;
         
         [Tooltip("Speed of the lateral transition between lanes.")]
-        [SerializeField] private float playerLaneChangeSpeed = 10.0f;
+        [SerializeField] private float laneChangeSpeed = 10.0f;
 
         private int currentLane = 1; // 0 = Left, 1 = Center, 2 = Right
         private Vector3 targetPosition;
@@ -59,7 +59,7 @@ namespace InfiniteRunner.Player
             transform.position = Vector3.Lerp(
                 transform.position, 
                 targetPosition, 
-                Time.deltaTime * playerLaneChangeSpeed
+                Time.deltaTime * laneChangeSpeed
             );
         }
 

@@ -52,6 +52,7 @@ namespace InfiniteRunner.Track
 
         /// <summary>
         /// Instantiates track segments and places them sequentially on the Z axis.
+        /// One segment is placed behind the player to cover the camera view.
         /// </summary>
         private void InitializePool()
         {
@@ -63,8 +64,8 @@ namespace InfiniteRunner.Track
 
             for (int i = 0; i < segmentCount; i++)
             {
-                // Calculate position along the Z axis
-                Vector3 spawnPosition = new Vector3(0, 0, i * segmentLength);
+                // Calculate position along the Z axis (start from i - 1 to place one segment behind the player)
+                Vector3 spawnPosition = new Vector3(0, 0, (i - 1) * segmentLength);
                 GameObject segmentInstance = Instantiate(segmentPrefab, spawnPosition, Quaternion.identity, transform);
                 
                 activeSegments.Add(segmentInstance);
@@ -85,13 +86,13 @@ namespace InfiniteRunner.Track
         }
 
         /// <summary>
-        /// Checks if the oldest segment has moved completely past the camera/player (Z = 0)
+        /// Checks if the oldest segment has moved completely past the camera
         /// and repositions it at the end of the track.
         /// </summary>
         private void CheckRecycle()
         {
-            // Recycle threshold is behind the player (e.g. Z < -segmentLength)
-            float recycleThreshold = -segmentLength;
+            // Recycle threshold is behind the player and camera (e.g. Z < -2 * segmentLength)
+            float recycleThreshold = -2.0f * segmentLength;
 
             for (int i = 0; i < activeSegments.Count; i++)
             {

@@ -15,6 +15,7 @@ namespace InfiniteRunner.Core
 
         [Header("State Settings")]
         [SerializeField] private GameState initialState = GameState.Stopped;
+
         private GameState currentState;
 
         // Events for decoupled communication
