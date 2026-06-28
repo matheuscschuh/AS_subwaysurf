@@ -10,6 +10,7 @@ using InfiniteRunner.Player;
 using InfiniteRunner.Track;
 using InfiniteRunner.UI;
 using InfiniteRunner.InputSystem;
+using InfiniteRunner.Obstacle;
 
 namespace InfiniteRunner.EditorTools
 {
@@ -19,6 +20,9 @@ namespace InfiniteRunner.EditorTools
         public static void BuildScene()
         {
             Debug.Log("Starting Infinite Runner Auto-Setup...");
+
+            // 0. Register custom tags required by the obstacle system
+            RegisterTag("Obstacle");
 
             // 1. Create Folder Structure
             CreateDirectories();
@@ -52,6 +56,7 @@ namespace InfiniteRunner.EditorTools
             // 7. Create Player
             GameObject playerGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
             playerGo.name = "Player";
+            playerGo.tag = "Player"; // Required for obstacle collision detection
             playerGo.transform.position = new Vector3(0f, 0.5f, 0f);
             playerGo.GetComponent<Renderer>().sharedMaterial = playerMat;
             PlayerController playerController = playerGo.AddComponent<PlayerController>();
@@ -86,6 +91,20 @@ namespace InfiniteRunner.EditorTools
             trackSerialized.ApplyModifiedProperties();
 
             Undo.RegisterCreatedObjectUndo(trackManagerGo, "Create TrackManager");
+
+            // 9.5. Create ObstacleSpawner
+            GameObject obstacleSpawnerGo = new GameObject("ObstacleSpawner");
+            ObstacleSpawner obstacleSpawner = obstacleSpawnerGo.AddComponent<ObstacleSpawner>();
+
+            SerializedObject obstacleSerialized = new SerializedObject(obstacleSpawner);
+            obstacleSerialized.FindProperty("spawnInterval").floatValue = 5.0f;
+            obstacleSerialized.FindProperty("initialDelay").floatValue = 10.0f;
+            obstacleSerialized.FindProperty("spawnDistance").floatValue = 80.0f;
+            obstacleSerialized.FindProperty("obstacleSpeed").floatValue = 15.0f;
+            obstacleSerialized.FindProperty("laneDistance").floatValue = 3.0f;
+            obstacleSerialized.ApplyModifiedProperties();
+
+            Undo.RegisterCreatedObjectUndo(obstacleSpawnerGo, "Create ObstacleSpawner");
 
             // 10. Create UI Canvas & Buttons
             SetupUI(gameManagerGo, out Button startButton, out Button stopButton, out Button restartButton);
@@ -345,6 +364,31 @@ namespace InfiniteRunner.EditorTools
                 EditorBuildSettings.scenes = newScenes;
                 Debug.Log($"Added scene to build settings: {scenePath}");
             }
+        }
+
+        /// <summary>
+        /// Registers a custom tag in the TagManager if it does not already exist.
+        /// </summary>
+        private static void RegisterTag(string tagName)
+        {
+            // Unity stores tags in ProjectSettings/TagManager.asset
+            SerializedObject tagManager = new SerializedObject(
+                AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]
+            );
+            SerializedProperty tagsProp = tagManager.FindProperty("tags");
+
+            // Check if tag already exists
+            for (int i = 0; i < tagsProp.arraySize; i++)
+            {
+                if (tagsProp.GetArrayElementAtIndex(i).stringValue == tagName)
+                    return; // Already registered
+            }
+
+            // Add new tag
+            tagsProp.InsertArrayElementAtIndex(tagsProp.arraySize);
+            tagsProp.GetArrayElementAtIndex(tagsProp.arraySize - 1).stringValue = tagName;
+            tagManager.ApplyModifiedProperties();
+            Debug.Log($"Registered custom tag: {tagName}");
         }
     }
 }
