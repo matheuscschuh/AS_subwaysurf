@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using InfiniteRunner.Core;
+using InfiniteRunner.Difficulty;
+
 
 namespace InfiniteRunner.Obstacle
 {
@@ -130,7 +132,13 @@ namespace InfiniteRunner.Obstacle
                 if (delayTimer <= 0f)
                 {
                     delayElapsed = true;
-                    spawnTimer = spawnInterval;
+                    
+                    float interval = spawnInterval;
+                    if (DifficultyManager.Instance != null && DifficultyManager.Instance.CurrentSpeed > 0f)
+                    {
+                        interval = DifficultyManager.Instance.CurrentSpawnDistance / DifficultyManager.Instance.CurrentSpeed;
+                    }
+                    spawnTimer = interval;
                 }
                 return;
             }
@@ -139,7 +147,13 @@ namespace InfiniteRunner.Obstacle
             if (spawnTimer <= 0f)
             {
                 SpawnObstacle();
-                spawnTimer = spawnInterval;
+                
+                float interval = spawnInterval;
+                if (DifficultyManager.Instance != null && DifficultyManager.Instance.CurrentSpeed > 0f)
+                {
+                    interval = DifficultyManager.Instance.CurrentSpawnDistance / DifficultyManager.Instance.CurrentSpeed;
+                }
+                spawnTimer = interval;
             }
         }
 
@@ -272,7 +286,12 @@ namespace InfiniteRunner.Obstacle
 
             // Script de movimento e detecção de colisão
             ObstacleController controller = obstacle.AddComponent<ObstacleController>();
-            controller.moveSpeed = obstacleSpeed;
+            float speed = obstacleSpeed;
+            if (DifficultyManager.Instance != null)
+            {
+                speed = DifficultyManager.Instance.CurrentSpeed;
+            }
+            controller.moveSpeed = speed;
 
             return obstacle;
         }

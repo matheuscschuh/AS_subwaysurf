@@ -1,5 +1,7 @@
 using UnityEngine;
 using InfiniteRunner.Core;
+using InfiniteRunner.Difficulty;
+
 
 namespace InfiniteRunner.Obstacle
 {
@@ -27,7 +29,13 @@ namespace InfiniteRunner.Obstacle
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.Running)
                 return;
 
-            transform.Translate(0, 0, -moveSpeed * Time.deltaTime);
+            float currentSpeed = moveSpeed;
+            if (DifficultyManager.Instance != null)
+            {
+                currentSpeed = DifficultyManager.Instance.CurrentSpeed;
+            }
+
+            transform.Translate(0, 0, -currentSpeed * Time.deltaTime);
 
             // Self-destroy when far behind the camera
             if (transform.position.z < DESPAWN_Z)

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using InfiniteRunner.Core;
+using InfiniteRunner.Difficulty;
+
 
 namespace InfiniteRunner.Track
 {
@@ -78,7 +80,13 @@ namespace InfiniteRunner.Track
         /// </summary>
         private void MoveTrack()
         {
-            float displacement = trackSpeed * Time.deltaTime;
+            float currentSpeed = trackSpeed;
+            if (DifficultyManager.Instance != null)
+            {
+                currentSpeed = DifficultyManager.Instance.CurrentSpeed;
+            }
+
+            float displacement = currentSpeed * Time.deltaTime;
             for (int i = 0; i < activeSegments.Count; i++)
             {
                 activeSegments[i].transform.Translate(0, 0, -displacement);
