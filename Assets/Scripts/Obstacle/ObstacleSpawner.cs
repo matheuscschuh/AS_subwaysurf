@@ -65,10 +65,19 @@ namespace InfiniteRunner.Obstacle
         [Tooltip("Distância lateral entre faixas (deve coincidir com PlayerController.laneDistance).")]
         [SerializeField] private float laneDistance = 3.0f;
 
+        [Header("Double Lane Settings")]
+        [Tooltip("Limiar de velocidade a partir do qual obstáculos em duas faixas começam a ser gerados.")]
+        [SerializeField] private float doubleLaneSpeedThreshold = 22.5f;
+
+        [Tooltip("Probabilidade (0-1) de gerar obstáculos em duas faixas quando a velocidade for média/alta.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float doubleLaneChance = 0.5f;
+
         private float spawnTimer;
         private float delayTimer;
         private bool delayElapsed;
         private int lastLane = -1; // -1 = sem faixa anterior
+        private int lastFreeLane = -1; // -1 = sem faixa livre anterior
 
         // Referências dos obstáculos spawnados para limpeza no restart
         private List<GameObject> spawnedObstacles = new List<GameObject>();
@@ -159,34 +168,104 @@ namespace InfiniteRunner.Obstacle
 
         /// <summary>
         /// Escolhe aleatoriamente o tipo e a faixa do obstáculo e o cria.
-        /// Probabilidades:
-        ///   Wall  = wallObstacleChance
-        ///   Tall  = tallObstacleChance  (do restante)
-        ///   Ground = o resto
+        /// Se a velocidade estiver acima do limite médio configurado, há uma chance
+        /// de gerar obstáculos em duas faixas simultaneamente.
         /// </summary>
         private void SpawnObstacle()
         {
-            float roll = Random.value;
+            float currentSpeed = obstacleSpeed;
+            if (DifficultyManager.Instance != null)
+            {
+                currentSpeed = DifficultyManager.Instance.CurrentSpeed;
+            }
 
-            ObstacleType type;
-            if (roll < wallObstacleChance)
-                type = ObstacleType.Wall;
-            else if (roll < wallObstacleChance + tallObstacleChance)
-                type = ObstacleType.Tall;
+            // Nova mecânica: Se a velocidade for média/alta e o sorteio permitir, spawna em 2 faixas
+            if (currentSpeed >= doubleLaneSpeedThreshold && Random.value < doubleLaneChance)
+            {
+                SpawnDoubleLaneObstacles();
+            }
             else
-                type = ObstacleType.Ground;
+            {
+                SpawnSingleLaneObstacle();
+            }
 
+            CleanNullReferences();
+        }
+
+        /// <summary>
+        /// Cria um obstáculo em uma única faixa selecionada aleatoriamente.
+        /// </summary>
+        private void SpawnSingleLaneObstacle()
+        {
+            // Reseta lastFreeLane para que na próxima vez qualquer faixa possa ser livre
+            lastFreeLane = -1;
+
+            ObstacleType type = GetRandomObstacleType();
             int lane = PickRandomLane();
-            float xPos = (lane - 1) * laneDistance; // faixa 0=esq, 1=centro, 2=dir
+            float xPos = (lane - 1) * laneDistance;
 
+            SpawnObstacleOfType(type, xPos);
+        }
+
+        /// <summary>
+        /// Cria obstáculos em duas faixas diferentes, mantendo exatamente uma faixa livre.
+        /// </summary>
+        private void SpawnDoubleLaneObstacles()
+        {
+            // Reseta lastLane para não interferir na lógica futura de faixa única
+            lastLane = -1;
+
+            // Determina a faixa livre (freeLane) garantindo que seja diferente de lastFreeLane se possível
+            int freeLane;
+            if (lastFreeLane < 0)
+            {
+                freeLane = Random.Range(0, 3);
+            }
+            else
+            {
+                // Escolhe entre as duas faixas que não eram livres
+                freeLane = Random.Range(0, 2);
+                if (freeLane >= lastFreeLane) freeLane++;
+            }
+            lastFreeLane = freeLane;
+
+            // As faixas ocupadas serão as outras duas faixas
+            for (int lane = 0; lane < 3; lane++)
+            {
+                if (lane == freeLane) continue;
+
+                // Tipo de obstáculo independente para cada uma das faixas ocupadas
+                ObstacleType type = GetRandomObstacleType();
+                float xPos = (lane - 1) * laneDistance;
+                SpawnObstacleOfType(type, xPos);
+            }
+        }
+
+        /// <summary>
+        /// Sorteia um tipo de obstáculo baseado nas probabilidades configuradas.
+        /// </summary>
+        private ObstacleType GetRandomObstacleType()
+        {
+            float roll = Random.value;
+            if (roll < wallObstacleChance)
+                return ObstacleType.Wall;
+            else if (roll < wallObstacleChance + tallObstacleChance)
+                return ObstacleType.Tall;
+            else
+                return ObstacleType.Ground;
+        }
+
+        /// <summary>
+        /// Spawna um obstáculo de um tipo específico em uma determinada posição lateral.
+        /// </summary>
+        private void SpawnObstacleOfType(ObstacleType type, float xPos)
+        {
             switch (type)
             {
                 case ObstacleType.Ground: SpawnGroundObstacle(xPos); break;
                 case ObstacleType.Tall:   SpawnTallObstacle(xPos);   break;
                 case ObstacleType.Wall:   SpawnWallObstacle(xPos);   break;
             }
-
-            CleanNullReferences();
         }
 
         /// <summary>
@@ -329,6 +408,7 @@ namespace InfiniteRunner.Obstacle
             }
             spawnedObstacles.Clear();
             lastLane = -1;
+            lastFreeLane = -1;
             ResetTimers();
         }
 
