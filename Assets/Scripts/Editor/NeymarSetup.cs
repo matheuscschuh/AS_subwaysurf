@@ -420,6 +420,12 @@ namespace InfiniteRunner.EditorTools
             Debug.Log($"[NeymarSetup] Animator configured on '{anim.gameObject.name}' | " +
                       $"Avatar={anim.avatar?.name ?? "none"} | RootMotion=OFF");
 
+            // ── Tag and Rigidbody for trigger collisions ──
+            player.tag = "Player";
+            Rigidbody rb = GetOrAdd<Rigidbody>(player);
+            rb.isKinematic = true;
+            rb.useGravity = false;
+
             // ── BoxCollider sized for a humanoid character ──
             BoxCollider col = GetOrAdd<BoxCollider>(player);
             col.center = new Vector3(0f, 0.9f, 0f);

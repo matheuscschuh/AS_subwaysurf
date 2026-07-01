@@ -11,6 +11,8 @@ using InfiniteRunner.Track;
 using InfiniteRunner.UI;
 using InfiniteRunner.InputSystem;
 using InfiniteRunner.Obstacle;
+using InfiniteRunner.Difficulty;
+
 
 namespace InfiniteRunner.EditorTools
 {
@@ -53,12 +55,23 @@ namespace InfiniteRunner.EditorTools
             GameManager gameManager = gameManagerGo.AddComponent<GameManager>();
             Undo.RegisterCreatedObjectUndo(gameManagerGo, "Create GameManager");
 
+            // 6.5. Create DifficultyManager
+            GameObject difficultyManagerGo = new GameObject("DifficultyManager");
+            difficultyManagerGo.AddComponent<DifficultyManager>();
+            Undo.RegisterCreatedObjectUndo(difficultyManagerGo, "Create DifficultyManager");
+
             // 7. Create Player
             GameObject playerGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
             playerGo.name = "Player";
             playerGo.tag = "Player"; // Required for obstacle collision detection
             playerGo.transform.position = new Vector3(0f, 0.5f, 0f);
             playerGo.GetComponent<Renderer>().sharedMaterial = playerMat;
+            
+            // Add Rigidbody for trigger collisions
+            Rigidbody playerRb = playerGo.AddComponent<Rigidbody>();
+            playerRb.isKinematic = true;
+            playerRb.useGravity = false;
+
             PlayerController playerController = playerGo.AddComponent<PlayerController>();
             
             // Access fields via Reflection or serialized properties to ensure settings are applied
@@ -97,9 +110,9 @@ namespace InfiniteRunner.EditorTools
             ObstacleSpawner obstacleSpawner = obstacleSpawnerGo.AddComponent<ObstacleSpawner>();
 
             SerializedObject obstacleSerialized = new SerializedObject(obstacleSpawner);
-            obstacleSerialized.FindProperty("spawnInterval").floatValue = 5.0f;
-            obstacleSerialized.FindProperty("initialDelay").floatValue = 10.0f;
-            obstacleSerialized.FindProperty("spawnDistance").floatValue = 80.0f;
+            obstacleSerialized.FindProperty("spawnInterval").floatValue = 3.0f;
+            obstacleSerialized.FindProperty("initialDelay").floatValue = 2.0f;
+            obstacleSerialized.FindProperty("spawnDistance").floatValue = 40.0f;
             obstacleSerialized.FindProperty("obstacleSpeed").floatValue = 15.0f;
             obstacleSerialized.FindProperty("laneDistance").floatValue = 3.0f;
             obstacleSerialized.ApplyModifiedProperties();
